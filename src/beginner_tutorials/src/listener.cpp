@@ -1,7 +1,7 @@
 #include "ros/ros.h"
 #include "std_msgs/String.h"
 
-#define NAME "dog"
+std::string name = "dog";
 int comFlag = 0;
 std::string comArray[] = {"sit", "stay", "down", "heel", "forward", "left", "right"};
 int noOfCom = sizeof(comArray)/sizeof(comArray[0]);
@@ -18,9 +18,9 @@ int noOfCom = sizeof(comArray)/sizeof(comArray[0]);
   }
 */
 
-void findCom(std::string com, std::string speech, std::size_t namePos){
-  std::size_t foundCom = speech.find(com, namePos);
-  if (foundCom != std::string::npos){
+void findCom(std::string com, std::string speech, std::size_t expComPos){
+  std::size_t foundCom = speech.find(" " + com + " ", expComPos);
+  if (foundCom == expComPos){
     std::cout << com << " command heard.\n";
     comFlag = 1;
   }
@@ -28,8 +28,8 @@ void findCom(std::string com, std::string speech, std::size_t namePos){
 
 void commandRecog(const std_msgs::String::ConstPtr& msg)
 {
-  std::string potCom = std::string(msg->data);
-  std::size_t namePos = potCom.find(NAME);
+  std::string potCom = " " + std::string(msg->data) + " ";
+  std::size_t namePos = potCom.find(" " + name + " ");
   std::size_t foundCom = 0;
   comFlag = 0;
 
@@ -39,50 +39,13 @@ void commandRecog(const std_msgs::String::ConstPtr& msg)
   if (namePos != std::string::npos){
     for(int i = 0; i < noOfCom; i++) {
       if(comFlag == 0) {
-        findCom(comArray[i], potCom, namePos);
+        findCom(comArray[i], potCom, namePos + name.length() + 1);
       }
     }
-    /*findCom("stay", potCom, namePos);
-    findCom("down", potCom, namePos);
-    findCom("heel", potCom, namePos);
-    findCom("forward", potCom, namePos);
-    findCom("left", potCom, namePos);
-    findCom("right", potCom, namePos);
-    foundCom = potCom.find("sit", namePos);
-    if (foundCom != std::string::npos){
-      std::cout << "Sit command heard.\n";
-      foundCom = std::string::npos;
-    } else
-    foundCom = potCom.find("stay", namePos);
-    if (foundCom != std::string::npos){
-      std::cout << "Stay command heard.\n";
-      foundCom = std::string::npos;
-    } else
-    foundCom = potCom.find("down", namePos);
-    if (foundCom != std::string::npos){
-      std::cout << "Down command heard.\n";
-      foundCom = std::string::npos;
-    } else
-    foundCom = potCom.find("heel", namePos);
-    if (foundCom != std::string::npos){
-      std::cout << "Heel command heard.\n";
-      foundCom = std::string::npos;
-    } else
-    foundCom = potCom.find("forward", namePos);
-    if (foundCom != std::string::npos){
-      std::cout << "Forward command heard.\n";
-      foundCom = std::string::npos;
-    } else
-    foundCom = potCom.find("left", namePos);
-    if (foundCom != std::string::npos){
-      std::cout << "Left command heard.\n";
-      foundCom = std::string::npos;
-    } else
-    foundCom = potCom.find("right", namePos);
-    if (foundCom != std::string::npos){
-      std::cout << "Right command heard.\n";
-      foundCom = std::string::npos;
-    }*/
+  }
+
+  if (comFlag == 0) {
+    std::cout << "x\n";
   }
 }
 
