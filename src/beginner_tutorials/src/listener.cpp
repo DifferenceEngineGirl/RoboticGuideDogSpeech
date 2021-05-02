@@ -1,99 +1,83 @@
+/**
+ * Based on code from http://wiki.ros.org/ROS/Tutorials/WritingPublisherSubscriber%28python%29
+ */
+
 #include "ros/ros.h"
 #include "std_msgs/String.h"
 
+// Initialise the name of the dog, to be used to mark commands
 std::string name = "dog";
-int comFlag = 0;
+
+// Initialise an array containing the desired commands to be listened for
 std::string comArray[] = {"sit", "stay", "down", "heel", "forward", "left", "right"};
+
+// Find the number of commands, and save it as a variable
 int noOfCom = sizeof(comArray)/sizeof(comArray[0]);
 
-/**
- * This tutorial demonstrates simple receipt of messages over the ROS system.
- */
+// Set a flag for if a command is found
+int comFlag = 0;
 
-/*
-  void chatterCallback(const std_msgs::String::ConstPtr& msg)
-  {
-    //ROS_INFO("I heard: [%s]", msg->data.c_str());
-    std::cout << msg->data.c_str() << "\n";
-  }
-*/
-
+// Function to detect a command within a string
 void findCom(std::string com, std::string speech, std::size_t expComPos){
+  // Find the location of the first character of the given command word in the string
   std::size_t foundCom = speech.find(" " + com + " ", expComPos);
+  // If the command word is found where it is expected
   if (foundCom == expComPos){
-    std::cout << com << " command heard.\n";
+    // Send the command + "command heard" to the stderr output
+    std::cerr << com << " command heard.\n";
+    // Send the command to the stdout output, which can be piped to a serial output.
+    std::cout << com << "\n";
+    // Set the command flag to 1
     comFlag = 1;
   }
 }
 
+// Function to recognise a command
 void commandRecog(const std_msgs::String::ConstPtr& msg)
 {
+  // Create a ctring variable containing the input, with added spaces before and after
   std::string potCom = " " + std::string(msg->data) + " ";
+  // Create a variable containing the position of the space before the peviously set name
   std::size_t namePos = potCom.find(" " + name + " ");
-  std::size_t foundCom = 0;
+  // Set the command flag to 0
   comFlag = 0;
 
-  //std::cout << msg->data.c_str() << "\n";
-  //std::cout << potCom << "\n";
+  // Send the recieved input to the stderr output
+  std::cerr << msg->data.c_str() << "\n";
 
+  // If the name is within the string
   if (namePos != std::string::npos){
+    // For each command in the array
     for(int i = 0; i < noOfCom; i++) {
+      // If a command hasn't already been found
       if(comFlag == 0) {
+        // Run the findCom function for the current command in the array, looking at the word after the name
         findCom(comArray[i], potCom, namePos + name.length() + 1);
       }
     }
   }
 
+  // If no command is found
   if (comFlag == 0) {
-    std::cout << "x\n";
+    // Send a message to the stderr output
+    std::cerr << "No command found\n";
   }
 }
 
+// Main function
 int main(int argc, char **argv)
 {
-  /**
-   * The ros::init() function needs to see argc and argv so that it can perform
-   * any ROS arguments and name remapping that were provided at the command line.
-   * For programmatic remappings you can use a different version of init() which takes
-   * remappings directly, but for most command-line programs, passing argc and argv is
-   * the easiest way to do it.  The third argument to init() is the name of the node.
-   *
-   * You must call one of the versions of ros::init() before using any other
-   * part of the ROS system.
-   */
+  // Initialise with any arguments passed from the command line
   ros::init(argc, argv, "listener");
 
-  /**
-   * NodeHandle is the main access point to communications with the ROS system.
-   * The first NodeHandle constructed will fully initialize this node, and the last
-   * NodeHandle destructed will close down the node.
-   */
+  // Create a ROS node handle
   ros::NodeHandle n;
 
-  /**
-   * The subscribe() call is how you tell ROS that you want to receive messages
-   * on a given topic.  This invokes a call to the ROS
-   * master node, which keeps a registry of who is publishing and who
-   * is subscribing.  Messages are passed to a callback function, here
-   * called chatterCallback.  subscribe() returns a Subscriber object that you
-   * must hold on to until you want to unsubscribe.  When all copies of the Subscriber
-   * object go out of scope, this callback will automatically be unsubscribed from
-   * this topic.
-   *
-   * The second parameter to the subscribe() function is the size of the message
-   * queue.  If messages are arriving faster than they are being processed, this
-   * is the number of messages that will be buffered up before beginning to throw
-   * away the oldest ones.
-   */
-  //ros::Subscriber sub = n.subscribe("chatter", 1000, chatterCallback);
+  // Subscribe to the node, and call the commandRecog function with all data received
   ros::Subscriber sub = n.subscribe("chatter", 1000, commandRecog);
 
 
-  /**
-   * ros::spin() will enter a loop, pumping callbacks.  With this version, all
-   * callbacks will be called from within this thread (the main one).  ros::spin()
-   * will exit when Ctrl-C is pressed, or the node is shutdown by the master.
-   */
+  // Enter a loop until ctrl+C is pressed
   ros::spin();
 
   return 0;
