@@ -35,9 +35,9 @@ void findCom(std::string com, std::string speech, std::size_t expComPos){
 // Function to recognise a command
 void commandRecog(const std_msgs::String::ConstPtr& msg)
 {
-  // Create a ctring variable containing the input, with added spaces before and after
+  // Create a string variable containing the input, with added spaces before and after
   std::string potCom = " " + std::string(msg->data) + " ";
-  // Create a variable containing the position of the space before the peviously set name
+  // Create a variable containing the position of the space before the previously set name
   std::size_t namePos = potCom.find(" " + name + " ");
   // Set the command flag to 0
   comFlag = 0;
